@@ -79,7 +79,7 @@ plt.show()
 # GRAPHIQUE 4: Contributions
 fig, axes = plt.subplots(1, 2, figsize=(14, 8))
 for i, ax in enumerate(axes):
-    contrib = pd.Series(col_contrib[:, i], index=col_coords.index).sort_values()
+    contrib = pd.Series(col_contrib.iloc[:, i], index=col_coords.index).sort_values()
     ax.barh(range(len(contrib)), contrib.values, color=['steelblue', 'darkorange'][i])
     ax.set_yticks(range(len(contrib)))
     ax.set_yticklabels(contrib.index)
