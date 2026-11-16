@@ -1,0 +1,613 @@
+\documentclass[12pt,a4paper]{article}
+
+% ============================================
+% PACKAGES
+% ============================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{amsmath, amsfonts}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+
+% ============================================
+% CONFIGURATION
+% ============================================
+\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
+
+% Configuration des listings pour R
+\lstdefinestyle{Rstyle}{
+    language=R,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!60!black},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    backgroundcolor=\color{gray!10},
+    frame=single,
+    breaklines=true,
+    tabsize=2,
+    literate={é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1 {à}{{\`a}}1 {ù}{{\`u}}1
+}
+
+% Configuration des listings pour Python
+\lstdefinestyle{Pythonstyle}{
+    language=Python,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!60!black},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    backgroundcolor=\color{yellow!10},
+    frame=single,
+    breaklines=true,
+    tabsize=4,
+    literate={é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1 {à}{{\`a}}1 {ù}{{\`u}}1
+}
+
+% En-tête
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{GMM2 - Exercice 4}
+\lhead{Analyse Factorielle des Données Mixtes}
+\cfoot{\thepage}
+
+% ============================================
+% DOCUMENT
+% ============================================
+\begin{document}
+
+% ============================================
+% TITRE
+% ============================================
+\begin{center}
+    \rule{\linewidth}{0.5mm}\\[0.4cm]
+    {\Huge \textbf{EXERCICE 4}}\\[0.3cm]
+    {\Large \textbf{Analyse Factorielle des Données Mixtes (AFDM)}}\\[0.2cm]
+    {\large Base de données : Bank}\\[0.1cm]
+    \rule{\linewidth}{0.5mm}\\[1cm]
+\end{center}
+
+% ============================================
+% PRÉSENTATION DES DONNÉES
+% ============================================
+\section{Présentation des Données}
+
+\subsection{Description}
+
+La base de données \textbf{Bank} contient des informations sur des clients d'une banque. Elle est caractérisée par la présence de \textbf{variables mixtes} : à la fois quantitatives et qualitatives, ce qui justifie l'utilisation de l'AFDM.
+
+\begin{itemize}
+    \item \textbf{Nombre d'observations} : 8 clients
+    \item \textbf{Nombre de variables} : 7 variables
+    \item \textbf{Variables quantitatives} : 2 (age, balance)
+    \item \textbf{Variables qualitatives} : 5 (job, marital, education, housing, loan)
+\end{itemize}
+
+\subsection{Description des variables}
+
+\begin{table}[H]
+\centering
+\caption{Description des variables de la base Bank}
+\begin{tabular}{|l|c|l|}
+\hline
+\textbf{Variable} & \textbf{Type} & \textbf{Description / Modalités} \\
+\hline
+age & Quantitative & Âge du client (en années) \\
+balance & Quantitative & Solde du compte bancaire (en euros) \\
+job & Qualitative & Profession (admin, technician, management, services, student, retired) \\
+marital & Qualitative & Statut marital (single, married, divorced) \\
+education & Qualitative & Niveau d'éducation (secondary, tertiary) \\
+housing & Qualitative & Crédit immobilier (yes, no) \\
+loan & Qualitative & Prêt personnel (yes, no) \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Tableau des données}
+
+\begin{table}[H]
+\centering
+\caption{Données brutes de la base Bank}
+\footnotesize
+\begin{tabular}{|c|c|l|l|l|c|c|c|}
+\hline
+\textbf{Ind.} & \textbf{Age} & \textbf{Job} & \textbf{Marital} & \textbf{Education} & \textbf{Balance} & \textbf{Housing} & \textbf{Loan} \\
+\hline
+1 & 30 & admin & single & secondary & 1200 & yes & no \\
+2 & 45 & technician & married & tertiary & 3500 & yes & no \\
+3 & 50 & management & married & tertiary & 8000 & no & no \\
+4 & 35 & services & single & secondary & 1500 & yes & yes \\
+5 & 28 & student & single & tertiary & 500 & no & no \\
+6 & 60 & retired & married & secondary & 4000 & no & no \\
+7 & 40 & admin & divorced & secondary & 2300 & yes & yes \\
+8 & 33 & services & married & secondary & 1800 & yes & no \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Statistiques descriptives}
+
+\subsubsection{Variables quantitatives}
+
+\begin{table}[H]
+\centering
+\caption{Statistiques descriptives des variables quantitatives}
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Variable} & \textbf{Moyenne} & \textbf{Écart-type} & \textbf{Min} & \textbf{Médiane} & \textbf{Max} \\
+\hline
+age & 40.12 & 10.97 & 28 & 37.5 & 60 \\
+balance & 2850 & 2382.68 & 500 & 2050 & 8000 \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Observations :}
+\begin{itemize}
+    \item L'âge moyen des clients est de 40 ans, avec une dispersion importante (écart-type de 11 ans)
+    \item Le solde moyen est de 2850€, avec une forte variabilité (de 500€ à 8000€)
+\end{itemize}
+
+\subsubsection{Variables qualitatives}
+
+\begin{table}[H]
+\centering
+\caption{Répartition des modalités des variables qualitatives}
+\begin{tabular}{|l|l|c|c|}
+\hline
+\textbf{Variable} & \textbf{Modalité} & \textbf{Effectif} & \textbf{Pourcentage} \\
+\hline
+\multirow{6}{*}{job} & admin & 2 & 25\% \\
+ & services & 2 & 25\% \\
+ & technician & 1 & 12.5\% \\
+ & management & 1 & 12.5\% \\
+ & student & 1 & 12.5\% \\
+ & retired & 1 & 12.5\% \\
+\hline
+\multirow{3}{*}{marital} & married & 4 & 50\% \\
+ & single & 3 & 37.5\% \\
+ & divorced & 1 & 12.5\% \\
+\hline
+\multirow{2}{*}{education} & secondary & 5 & 62.5\% \\
+ & tertiary & 3 & 37.5\% \\
+\hline
+\multirow{2}{*}{housing} & yes & 5 & 62.5\% \\
+ & no & 3 & 37.5\% \\
+\hline
+\multirow{2}{*}{loan} & no & 6 & 75\% \\
+ & yes & 2 & 25\% \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Observations :}
+\begin{itemize}
+    \item \textbf{Job} : Diversité des professions, avec prédominance des administratifs et des employés de services
+    \item \textbf{Marital} : Moitié des clients sont mariés
+    \item \textbf{Education} : Majorité de niveau secondaire (62.5\%)
+    \item \textbf{Housing} : La majorité des clients (62.5\%) ont un crédit immobilier
+    \item \textbf{Loan} : Seuls 25\% des clients ont un prêt personnel
+\end{itemize}
+
+% ============================================
+% MÉTHODOLOGIE
+% ============================================
+\section{Méthodologie}
+
+L'\textbf{Analyse Factorielle des Données Mixtes (AFDM)} est une méthode d'analyse multivariée adaptée aux jeux de données contenant simultanément des \textbf{variables quantitatives} et \textbf{qualitatives}. Elle combine les principes de :
+
+\begin{itemize}
+    \item L'\textbf{ACP} (Analyse en Composantes Principales) pour les variables quantitatives
+    \item L'\textbf{ACM} (Analyse des Correspondances Multiples) pour les variables qualitatives
+\end{itemize}
+
+\textbf{Principe :} L'AFDM équilibre la contribution des deux types de variables en :
+\begin{enumerate}
+    \item \textbf{Normalisant} les variables quantitatives (centrage-réduction)
+    \item \textbf{Pondérant} les variables qualitatives selon leur nombre de modalités
+    \item \textbf{Maximisant} l'inertie expliquée sur des axes factoriels communs
+\end{enumerate}
+
+\textbf{Objectifs :}
+\begin{enumerate}
+    \item Visualiser les relations entre individus
+    \item Identifier les associations entre variables de types différents
+    \item Détecter des profils types de clients
+    \item Réduire la dimensionnalité tout en conservant l'information mixte
+\end{enumerate}
+
+% ============================================
+% RÉSULTATS
+% ============================================
+\section{Résultats}
+
+\subsection{Valeurs propres et inertie}
+
+\begin{table}[H]
+\centering
+\caption{Valeurs propres et variance expliquée}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Dimension} & \textbf{Valeur propre} & \textbf{Variance (\%)} & \textbf{Cumul (\%)} \\
+\hline
+Dim.1 & 8.694 & 35.81 & 35.81 \\
+Dim.2 & 5.129 & 21.12 & 56.93 \\
+Dim.3 & 3.915 & 16.12 & 73.05 \\
+Dim.4 & 3.737 & 15.39 & 88.45 \\
+Dim.5 & 2.806 & 11.55 & 100.00 \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Observations :}
+\begin{itemize}
+    \item Les \textbf{deux premières dimensions} expliquent \textbf{56.93\%} de l'inertie totale
+    \item Les \textbf{trois premières dimensions} atteignent \textbf{73.05\%}
+    \item La première dimension est la plus importante (35.81\%), ce qui suggère une structure principale forte
+\end{itemize}
+
+\subsection{Résultats numériques}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{"resultats numeriques.png"}
+    \caption{Résultats numériques de l'AFDM (valeurs propres, coordonnées, contributions)}
+    \label{fig:resultats}
+\end{figure}
+
+\subsection{Graphiques de l'AFDM}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{"FADM_plot variables.png"}
+    \caption{Projection des variables sur le plan factoriel (Dim 1 - Dim 2)}
+    \label{fig:variables}
+\end{figure}
+
+\subsection{Contributions des variables}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{"contibution dim1 variables.png"}
+    \caption{Contribution des variables à la dimension 1}
+    \label{fig:contrib_var1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{"contibution dim2 variables.png"}
+    \caption{Contribution des variables à la dimension 2}
+    \label{fig:contrib_var2}
+\end{figure}
+
+\subsection{Contributions des individus}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{"contibution dim1 individus.png"}
+    \caption{Contribution des individus à la dimension 1}
+    \label{fig:contrib_ind1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{"contibution dim2 individus.png"}
+    \caption{Contribution des individus à la dimension 2}
+    \label{fig:contrib_ind2}
+\end{figure}
+
+\subsection{Contributions numériques des variables}
+
+\begin{table}[H]
+\centering
+\caption{Contributions des variables aux deux premiers axes (\%)}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Variable} & \textbf{Dim.1 (\%)} & \textbf{Dim.2 (\%)} \\
+\hline
+age & 3.45 & 10.66 \\
+balance & 5.30 & 5.71 \\
+education & 5.92 & 3.29 \\
+housing & 6.79 & 0.57 \\
+job & \textbf{10.68} & \textbf{17.18} \\
+loan & 6.35 & 0.50 \\
+marital & 6.77 & 11.91 \\
+\hline
+\end{tabular}
+\end{table}
+
+% ============================================
+% INTERPRÉTATION
+% ============================================
+\section{Interprétation des Résultats}
+
+\subsection{Interprétation des axes factoriels}
+
+\subsubsection{Axe 1 : Profil socio-économique global (35.81\% d'inertie)}
+
+Le premier axe factoriel représente un \textbf{gradient socio-économique} qui oppose :
+
+\textbf{Côté positif :}
+\begin{itemize}
+    \item \textbf{Clients plus âgés} avec des \textbf{soldes bancaires élevés}
+    \item Professions de type \textbf{management} et \textbf{retired}
+    \item Statut \textbf{married}
+    \item Niveau d'éducation \textbf{tertiary}
+    \item Pas de crédit immobilier ni de prêt personnel
+\end{itemize}
+
+\textbf{Côté négatif :}
+\begin{itemize}
+    \item \textbf{Clients plus jeunes} avec des \textbf{soldes modestes}
+    \item Professions de type \textbf{services}, \textbf{admin} ou \textbf{student}
+    \item Statut \textbf{single}
+    \item Niveau \textbf{secondary}
+    \item Présence de crédits (housing = yes)
+\end{itemize}
+
+\textbf{Interprétation :} Cet axe distingue les \textbf{clients aisés et établis} (âgés, bonne situation financière, mariés, niveau d'éducation supérieur) des \textbf{clients plus modestes et en début de vie active} (jeunes, soldes faibles, célibataires, niveau secondaire, endettés).
+
+La variable \textbf{job} contribue le plus à cet axe (10.68\%), suivie de \textbf{marital} (6.77\%) et \textbf{housing} (6.79\%).
+
+\subsubsection{Axe 2 : Profession et situation familiale (21.12\% d'inertie)}
+
+Le deuxième axe apporte une information complémentaire en distinguant :
+
+\textbf{Côté positif :}
+\begin{itemize}
+    \item Profession \textbf{student}
+    \item Clients \textbf{jeunes} 
+    \item Statut \textbf{single}
+\end{itemize}
+
+\textbf{Côté négatif :}
+\begin{itemize}
+    \item Professions \textbf{retired} et \textbf{management}
+    \item Clients plus \textbf{âgés}
+    \item Statut \textbf{married}
+\end{itemize}
+
+\textbf{Interprétation :} L'axe 2 oppose les \textbf{étudiants} (jeunes, célibataires) aux \textbf{retraités et cadres} (âgés, mariés). Il capture la dimension du \textbf{cycle de vie}.
+
+Les principales contributions viennent de \textbf{job} (17.18\%), \textbf{marital} (11.91\%) et \textbf{age} (10.66\%).
+
+\subsection{Analyse des profils types}
+
+\subsubsection{Profil 1 : Clients aisés et établis}
+
+Ce profil regroupe les individus caractérisés par :
+\begin{itemize}
+    \item Âge élevé (50-60 ans)
+    \item Profession de niveau supérieur (management, retired)
+    \item Marié(e)
+    \item Niveau d'éducation tertiary
+    \item Solde bancaire élevé (4000-8000€)
+    \item Pas de prêts en cours
+\end{itemize}
+
+\textbf{Exemple} : Individu 3 (management, 50 ans, married, tertiary, balance=8000€)
+
+\subsubsection{Profil 2 : Jeunes actifs avec crédits}
+
+Ce profil est caractérisé par :
+\begin{itemize}
+    \item Âge moyen (30-40 ans)
+    \item Profession intermédiaire (admin, services, technician)
+    \item Célibataire ou marié(e)
+    \item Niveau secondary
+    \item Solde modeste (1200-2300€)
+    \item Crédit immobilier et/ou prêt personnel
+\end{itemize}
+
+\textbf{Exemples} : Individus 1, 4, 7 (admin/services, 30-40 ans, secondary, housing=yes)
+
+\subsubsection{Profil 3 : Étudiants}
+
+Ce profil particulier se caractérise par :
+\begin{itemize}
+    \item Très jeune (28 ans)
+    \item Profession : student
+    \item Célibataire
+    \item Niveau tertiary (études supérieures en cours)
+    \item Solde très faible (500€)
+    \item Pas de crédits
+\end{itemize}
+
+\textbf{Exemple} : Individu 5 (student, 28 ans, single, tertiary, balance=500€)
+
+\subsection{Relations entre variables quantitatives et qualitatives}
+
+L'AFDM révèle des associations intéressantes :
+
+\begin{enumerate}
+    \item \textbf{Age et marital} : Les clients âgés sont majoritairement mariés, tandis que les jeunes sont célibataires. Cette corrélation logique reflète le cycle de vie familial.
+    
+    \item \textbf{Balance et job} : Les professions de niveau supérieur (management, retired) sont associées à des soldes élevés, confirmant le lien entre statut professionnel et capacité d'épargne.
+    
+    \item \textbf{Education et job} : Le niveau tertiary est associé aux professions qualifiées (management, technician), tandis que secondary est lié aux emplois administratifs et de services.
+    
+    \item \textbf{Housing et age} : Les clients jeunes et intermédiaires sont plus susceptibles d'avoir un crédit immobilier, correspondant à la phase d'acquisition du logement.
+    
+    \item \textbf{Loan et housing} : Les prêts personnels sont souvent combinés avec un crédit immobilier, suggérant un profil d'endettement multiple.
+\end{enumerate}
+
+\subsection{Synthèse de l'interprétation}
+
+L'AFDM appliquée aux données Bank révèle :
+
+\begin{enumerate}
+    \item \textbf{Une structure socio-économique claire} (Axe 1) : Opposition entre clients aisés/établis et clients modestes/en début de carrière.
+    
+    \item \textbf{Un effet du cycle de vie} (Axe 2) : Distinction entre les phases de vie (étudiant, actif, retraité) avec leurs caractéristiques associées.
+    
+    \item \textbf{Des profils clients cohérents} : L'analyse identifie au moins trois segments distincts exploitables pour du ciblage marketing ou la gestion du risque crédit.
+    
+    \item \textbf{L'importance de la profession} : La variable job contribue le plus aux deux axes, confirmant son rôle central dans la caractérisation des clients.
+    
+    \item \textbf{La complémentarité des variables} : Les variables quantitatives (age, balance) et qualitatives (job, marital, education) apportent des informations convergentes sur les profils clients.
+\end{enumerate}
+
+% ============================================
+% CODES
+% ============================================
+\section{Codes R et Python}
+
+\subsection{Code R}
+
+\begin{lstlisting}[style=Rstyle, caption={Code R pour l'AFDM avec FactoMineR et factoextra}]
+# Chargement des librairies necessaires
+library(readxl)
+library(FactoMineR)
+library(ggplot2)
+library(factoextra)
+library(PCAmixdata)
+
+# Importation des donnees
+bank <- read_excel("bank.xlsx")
+
+# Exploration des donnees
+dim(bank)          # Dimensions du jeu de donnees
+head(bank, 10)     # Apercu des 10 premieres lignes
+str(bank)          # Structure des variables
+
+# Statistiques descriptives
+summary(bank)
+
+# Realisation de l'AFDM
+res.famd <- FAMD(bank, graph = FALSE)
+
+# Affichage des resultats numeriques
+summary(res.famd)
+
+# Graphique des variables
+fviz_famd_var(res.famd)
+
+# Eboulis des valeurs propres
+fviz_eig(res.famd)
+
+# Contribution des variables a la dimension 1
+fviz_contrib(res.famd, choice = "var", axes = 1)
+
+# Contribution des variables a la dimension 2
+fviz_contrib(res.famd, choice = "var", axes = 2)
+
+# Contribution des individus a la dimension 1
+fviz_contrib(res.famd, choice = "ind", axes = 1)
+
+# Contribution des individus a la dimension 2
+fviz_contrib(res.famd, choice = "ind", axes = 2)
+\end{lstlisting}
+
+\subsection{Code Python}
+
+\begin{lstlisting}[style=Pythonstyle, caption={Code Python pour l'AFDM avec prince}]
+# Chargement des librairies
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import prince
+
+# Chargement des donnees
+bank = pd.read_excel("bank.xlsx")
+
+# Conversion des types pour prince
+# Variables quantitatives en float
+bank['age'] = bank['age'].astype(float)
+bank['balance'] = bank['balance'].astype(float)
+
+# Variables qualitatives en category
+for col in ['job', 'marital', 'education', 'housing', 'loan']:
+    bank[col] = bank[col].astype('category')
+
+# Affichage des informations
+print("Dimensions :", bank.shape)
+print("\nApercu :")
+print(bank.head())
+
+# Statistiques descriptives
+print("\nStatistiques quantitatives :")
+print(bank.describe())
+
+# Realisation de l'AFDM
+famd = prince.FAMD(
+    n_components=5,
+    n_iter=3,
+    random_state=42
+)
+famd = famd.fit(bank)
+
+# Valeurs propres
+eigenvalues = famd.eigenvalues_
+total_inertia = sum(eigenvalues)
+print("\n=== VALEURS PROPRES ===")
+for i, eig in enumerate(eigenvalues):
+    var_pct = eig / total_inertia * 100
+    cum_pct = sum(eigenvalues[:i+1]) / total_inertia * 100
+    print(f"Dim.{i+1}: {eig:.3f} ({var_pct:.2f}%, cumul: {cum_pct:.2f}%)")
+
+# Coordonnees des individus
+print("\n=== COORDONNEES DES INDIVIDUS ===")
+row_coords = famd.row_coordinates(bank)
+print(row_coords.round(3))
+
+# Coordonnees des variables
+print("\n=== COORDONNEES DES VARIABLES ===")
+col_coords = famd.column_coordinates(bank)
+print(col_coords.round(3))
+
+# Contributions des variables
+print("\n=== CONTRIBUTIONS DES VARIABLES (%) ===")
+var_contrib = famd.column_contributions_ * 100
+print(var_contrib.round(2))
+
+# Visualisation du biplot
+ax = famd.plot(
+    bank,
+    x_component=0,
+    y_component=1,
+    show_column_markers=True,
+    show_row_markers=True
+)
+plt.title("AFDM - Biplot Dimensions 1 et 2")
+plt.tight_layout()
+plt.savefig("famd_biplot.png", dpi=150)
+plt.show()
+\end{lstlisting}
+
+% ============================================
+% CONCLUSION
+% ============================================
+\section{Conclusion}
+
+L'Analyse Factorielle des Données Mixtes appliquée aux données Bank a permis de :
+
+\begin{enumerate}
+    \item \textbf{Traiter simultanément les deux types de variables} : Les 2 variables quantitatives (age, balance) et les 5 variables qualitatives (job, marital, education, housing, loan) ont été intégrées dans une analyse unique.
+    
+    \item \textbf{Identifier deux dimensions structurantes} : L'axe 1 (35.81\%) capture le niveau socio-économique global, tandis que l'axe 2 (21.12\%) reflète le cycle de vie des clients.
+    
+    \item \textbf{Révéler des profils clients distincts} : Trois segments ont été identifiés (clients aisés, jeunes actifs endettés, étudiants), exploitables pour des stratégies commerciales différenciées.
+    
+    \item \textbf{Mettre en évidence l'importance de la profession} : La variable job s'avère la plus discriminante, contribuant fortement aux deux axes principaux.
+    
+    \item \textbf{Confirmer des associations logiques} : Les relations observées (âge-statut marital, profession-revenus, éducation-emploi) sont cohérentes avec les connaissances sociologiques.
+\end{enumerate}
+
+\textbf{Limites :} La petite taille de l'échantillon (8 observations) limite la généralisation des résultats. Une analyse sur un échantillon plus représentatif permettrait de valider ces profils.
+
+\textbf{Applications potentielles :}
+\begin{itemize}
+    \item Segmentation marketing de la clientèle bancaire
+    \item Scoring de risque crédit
+    \item Personnalisation des offres de produits financiers
+\end{itemize}
+
+\end{document}

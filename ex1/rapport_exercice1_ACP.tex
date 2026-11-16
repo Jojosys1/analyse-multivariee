@@ -1,0 +1,498 @@
+\documentclass[12pt,a4paper]{article}
+
+% ============================================
+% PACKAGES
+% ============================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tocloft}
+
+\section{Introduction}
+
+L'Analyse en Composantes Principales (ACP) est une méthode statistique multivariée qui permet de réduire la dimensionnalité d'un jeu de données tout en conservant le maximum d'information. Cette technique est particulièrement utile lorsqu'on dispose d'un grand nombre de variables quantitatives corrélées entre elles.
+
+Dans cet exercice, nous appliquons l'ACP sur la base de données \textbf{Wine}, qui contient des mesures chimiques effectuées sur des vins provenant de trois cultivars différents d'Italie.
+
+% ============================================
+% PRÉSENTATION DES DONNÉES
+% ============================================
+\section{Présentation et Description des Données}
+
+\subsection{Source des données}
+
+La base de données \textbf{Wine} est un jeu de données classique en analyse de données. Elle contient les résultats d'une analyse chimique de vins cultivés dans la même région d'Italie mais provenant de trois cultivars différents.
+
+\subsection{Structure des données}
+
+\begin{itemize}
+    \item \textbf{Nombre d'observations} : 178 vins
+    \item \textbf{Nombre de variables} : 13 variables quantitatives + 1 variable cible (target)
+\end{itemize}
+
+\subsection{Description des variables}
+
+Les 13 variables quantitatives représentent des caractéristiques chimiques des vins :
+
+\begin{table}[H]
+\centering
+\caption{Description des variables de la base Wine}
+\begin{tabular}{|l|p{8cm}|}
+\hline
+\textbf{Variable} & \textbf{Description} \\
+\hline
+alcohol & Teneur en alcool \\
+malic\_acid & Acide malique \\
+ash & Cendres \\
+alcalinity\_of\_ash & Alcalinité des cendres \\
+magnesium & Magnésium \\
+total\_phenols & Phénols totaux \\
+flavanoids & Flavonoïdes \\
+nonflavanoid\_phenols & Phénols non-flavonoïdes \\
+proanthocyanins & Proanthocyanidines \\
+color\_intensity & Intensité de la couleur \\
+hue & Teinte \\
+od280/od315\_of\_diluted\_wines & OD280/OD315 des vins dilués \\
+proline & Proline \\
+\hline
+target & Variable cible (3 classes : 0, 1, 2) \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Statistiques descriptives}
+
+\begin{table}[H]
+\centering
+\caption{Statistiques descriptives des principales variables}
+\footnotesize
+\begin{tabular}{|l|r|r|r|r|r|}
+\hline
+\textbf{Variable} & \textbf{Moyenne} & \textbf{Écart-type} & \textbf{Min} & \textbf{Médiane} & \textbf{Max} \\
+\hline
+alcohol & 13.00 & 0.81 & 11.03 & 13.05 & 14.83 \\
+malic\_acid & 2.34 & 1.12 & 0.74 & 1.87 & 5.80 \\
+ash & 2.37 & 0.27 & 1.36 & 2.36 & 3.23 \\
+alcalinity\_of\_ash & 19.49 & 3.34 & 10.60 & 19.50 & 30.00 \\
+magnesium & 99.74 & 14.28 & 70.00 & 98.00 & 162.00 \\
+total\_phenols & 2.30 & 0.63 & 0.98 & 2.36 & 3.88 \\
+flavanoids & 2.03 & 1.00 & 0.34 & 2.13 & 5.08 \\
+color\_intensity & 5.06 & 2.32 & 1.28 & 4.69 & 13.00 \\
+hue & 0.96 & 0.23 & 0.48 & 0.96 & 1.71 \\
+proline & 746.89 & 314.91 & 278.00 & 673.50 & 1680.00 \\
+\hline
+\end{tabular}
+\end{table}
+
+
+
+\\
+
+\newpage
+% ============================================
+% MÉTHODOLOGIE
+% ============================================
+\section{Méthodologie}
+
+\subsection{Principe de l'ACP}
+
+L'Analyse en Composantes Principales est une méthode d'analyse factorielle qui vise à :
+
+\begin{enumerate}
+    \item \textbf{Réduire la dimensionnalité} : Transformer un grand nombre de variables corrélées en un nombre réduit de nouvelles variables non corrélées appelées \textbf{composantes principales}.
+    
+    \item \textbf{Maximiser la variance} : Chaque composante principale capture le maximum de variance possible, la première composante capturant le plus de variance, la seconde le maximum de variance résiduelle, etc.
+    
+    \item \textbf{Visualiser les données} : Permettre une représentation graphique des individus et des variables dans un espace de dimension réduite.
+\end{enumerate}
+
+\subsection{Étapes de l'analyse}
+
+\begin{enumerate}
+    \item \textbf{Préparation des données} : Suppression de la variable cible (target) qui est qualitative.
+    
+    \item \textbf{Standardisation} : Centrage et réduction des variables (moyenne = 0, écart-type = 1) pour que toutes les variables aient le même poids dans l'analyse.
+    
+    \item \textbf{Calcul de la matrice de corrélation} : Base de l'ACP normée.
+    
+    \item \textbf{Extraction des valeurs propres et vecteurs propres} : Détermination des composantes principales.
+    
+    \item \textbf{Choix du nombre de composantes} : Utilisation du critère de Kaiser (valeurs propres > 1) ou du pourcentage de variance expliquée.
+    
+    \item \textbf{Interprétation} : Analyse du cercle des corrélations et de la projection des individus.
+\end{enumerate}
+
+\subsection{Outils utilisés}
+
+\begin{itemize}
+    \item \textbf{R} : Package \texttt{FactoMineR} pour l'ACP et \texttt{GGally} pour les visualisations
+    \item \textbf{Python} : Libraries \texttt{scikit-learn} (PCA, StandardScaler), \texttt{matplotlib} et \texttt{seaborn}
+\end{itemize}
+
+% ============================================
+% RÉSULTATS
+% ============================================
+\section{Résultats Numériques et Graphiques}
+
+\subsection{Valeurs propres et variance expliquée}
+
+Le tableau suivant présente les valeurs propres et le pourcentage de variance expliquée par chaque composante principale :
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/ex1/variance_table.png}
+    \caption{Matrice de corrélation entre les variables}
+    \label{fig:matcorr}
+\end{figure}
+
+\textbf{Observations :}
+\begin{itemize}
+    \item Les \textbf{trois premières composantes} expliquent \textbf{66.53\%} de la variance totale.
+    \item Les \textbf{cinq premières composantes} atteignent \textbf{80.16\%} de variance expliquée.
+    \item Selon le critère de Kaiser (valeur propre > 1), nous retenons les \textbf{3 premières composantes}.
+\end{itemize}
+
+\subsection{Valeurs propres}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{imatrice_correlation.png}
+    \caption{Matrice de corrélation entre les variables}
+    \label{fig:matcorr}
+\end{figure}
+
+\subsection{Corrélations variables / Composantes principales}
+
+\begin{table}[H]
+\centering
+\caption{Corrélations entre les variables et les 3 premières composantes}
+\footnotesize
+\begin{tabular}{|l|r|r|r|}
+\hline
+\textbf{Variable} & \textbf{Dim.1} & \textbf{Dim.2} & \textbf{Dim.3} \\
+\hline
+alcohol & 0.314 & 0.766 & -0.250 \\
+malic\_acid & -0.533 & 0.356 & 0.107 \\
+ash & -0.004 & 0.501 & 0.755 \\
+alcalinity\_of\_ash & -0.521 & -0.017 & 0.738 \\
+magnesium & 0.309 & 0.475 & 0.158 \\
+total\_phenols & \textbf{0.859} & 0.103 & 0.176 \\
+flavanoids & \textbf{0.920} & -0.005 & 0.182 \\
+nonflavanoid\_phenols & \textbf{-0.649} & 0.046 & 0.205 \\
+proanthocyanins & 0.682 & 0.062 & 0.180 \\
+color\_intensity & -0.193 & \textbf{0.840} & -0.166 \\
+hue & 0.645 & -0.442 & 0.103 \\
+od280/od315 & \textbf{0.818} & -0.261 & 0.200 \\
+proline & 0.624 & 0.578 & -0.153 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Cercle des corrélations}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/ex1/cercle_correlation.png}
+    \caption{Cercle des corrélations sur les axes 1 et 2}
+    \label{fig:cercle}
+\end{figure}
+
+\subsection{Projection des individus}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/ex1/projection_individus.png}
+    \caption{Projection des individus sur le plan factoriel (Dim 1 - Dim 2)}
+    \label{fig:individus}
+\end{figure}
+
+\subsection{Matrice de corrélation des variables}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/ex1/matrice_correlation.png}
+    \caption{Matrice de corrélation entre les variables}
+    \label{fig:matcorr}
+\end{figure}
+
+\subsection{Contribution des variables aux axes}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/ex1/contributions_variables.png}
+    \caption{Contribution des variables aux composantes principales 1 et 2}
+    \label{fig:contrib}
+\end{figure}
+
+% ============================================
+% INTERPRÉTATION
+% ============================================
+\section{Interprétation des Résultats}
+
+\subsection{Interprétation des axes factoriels}
+
+\subsubsection{Axe 1 (36.20\% de variance)}
+
+Le premier axe factoriel est principalement caractérisé par :
+
+\textbf{Variables positivement corrélées (côté positif) :}
+\begin{itemize}
+    \item \textbf{Flavanoids} (0.920) : Très forte corrélation
+    \item \textbf{Total\_phenols} (0.859) : Forte corrélation
+    \item \textbf{OD280/OD315} (0.818) : Forte corrélation
+    \item \textbf{Proanthocyanins} (0.682)
+    \item \textbf{Hue} (0.645)
+    \item \textbf{Proline} (0.624)
+\end{itemize}
+
+\textbf{Variables négativement corrélées (côté négatif) :}
+\begin{itemize}
+    \item \textbf{Nonflavanoid\_phenols} (-0.649)
+    \item \textbf{Malic\_acid} (-0.533)
+    \item \textbf{Alcalinity\_of\_ash} (-0.521)
+\end{itemize}
+
+\textbf{Interprétation :} L'axe 1 oppose les vins riches en \textbf{composés phénoliques} (flavonoïdes, phénols totaux) aux vins ayant une forte teneur en \textbf{acide malique} et en \textbf{phénols non-flavonoïdes}. Cet axe peut être interprété comme un axe de \textbf{qualité phénolique} des vins.
+
+\subsubsection{Axe 2 (19.21\% de variance)}
+
+Le deuxième axe factoriel est caractérisé par :
+
+\textbf{Variables positivement corrélées :}
+\begin{itemize}
+    \item \textbf{Color\_intensity} (0.840) : Très forte corrélation
+    \item \textbf{Alcohol} (0.766) : Forte corrélation
+    \item \textbf{Proline} (0.578)
+    \item \textbf{Ash} (0.501)
+\end{itemize}
+
+\textbf{Variables négativement corrélées :}
+\begin{itemize}
+    \item \textbf{Hue} (-0.442)
+\end{itemize}
+
+\textbf{Interprétation :} L'axe 2 est dominé par l'\textbf{intensité colorante} et la \textbf{teneur en alcool}. Il oppose les vins \textbf{colorés et alcoolisés} aux vins de teinte plus claire. Cet axe peut être interprété comme un axe d'\textbf{intensité} du vin.
+
+\subsection{Interprétation du cercle des corrélations}
+
+Le cercle des corrélations (Figure \ref{fig:cercle}) révèle plusieurs groupes de variables :
+
+\begin{enumerate}
+    \item \textbf{Groupe 1 (quadrant supérieur droit)} : Variables liées à l'intensité (alcohol, color\_intensity, proline, magnesium)
+    
+    \item \textbf{Groupe 2 (quadrant inférieur droit)} : Variables phénoliques (flavanoids, total\_phenols, od280/od315, hue, proanthocyanins)
+    
+    \item \textbf{Groupe 3 (quadrant supérieur gauche)} : Variables liées à l'acidité et aux cendres (malic\_acid, ash)
+    
+    \item \textbf{Groupe 4 (quadrant inférieur gauche)} : Variables inverses aux composés phénoliques (nonflavanoid\_phenols, alcalinity\_of\_ash)
+\end{enumerate}
+
+\subsection{Interprétation de la projection des individus}
+
+La projection des individus (Figure \ref{fig:individus}) montre une \textbf{séparation nette des trois classes} de vins :
+
+\begin{itemize}
+    \item \textbf{Classe 0} (rouge) : Vins situés principalement dans la partie droite du graphique, caractérisés par une forte teneur en composés phénoliques et en proline.
+    
+    \item \textbf{Classe 1} (bleu) : Vins situés dans la partie centrale-inférieure, avec des valeurs moyennes pour la plupart des caractéristiques.
+    
+    \item \textbf{Classe 2} (vert) : Vins situés dans la partie gauche, caractérisés par une teneur élevée en acide malique et faible en composés phénoliques.
+\end{itemize}
+
+Cette bonne séparation des classes confirme que l'ACP permet de distinguer efficacement les trois cultivars de vins italiens.
+
+\subsection{Synthèse}
+
+L'ACP réalisée sur les données Wine permet de :
+\begin{enumerate}
+    \item Réduire les 13 variables initiales à 3 composantes principales expliquant 66.53\% de la variance.
+    \item Identifier deux dimensions principales : la \textbf{qualité phénolique} (Axe 1) et l'\textbf{intensité} (Axe 2).
+    \item Visualiser clairement la séparation des trois types de vins dans l'espace factoriel.
+    \item Mettre en évidence les corrélations entre les variables chimiques.
+\end{enumerate}
+
+% ============================================
+% CODES
+% ============================================
+\section{Codes R et Python}
+
+\subsection{Code R}
+
+\begin{lstlisting}[style=Rstyle, caption={Code R pour l'ACP avec FactoMineR}]
+# Charger les librairies
+library(FactoMineR)
+library(GGally)
+library(readxl)
+
+# Charger la base de donnees
+wine <- read_excel("wine.xlsx")
+View(wine)
+
+# Examiner les dimensions (nombre de lignes et colonnes)
+dim(wine)
+
+# Visualiser les 5 premieres lignes
+head(wine, 5)
+
+# Supprimer la colonne de la variable target
+wine <- wine[, -14]
+
+# Examiner la matrice de diagramme de dispersion
+ggpairs(wine)
+
+# Realiser l'ACP
+ResACP <- PCA(wine, graph = FALSE)
+ResACP
+
+# Extraire les Valeurs propres de l'ACP
+ResACP$eig
+
+# Extraire le tableau des correlations des variables 
+# avec les Composantes Principales
+ResACP$var$cor
+
+# Afficher le cercle des correlations (Composantes 1 & 2)
+plot(ResACP, choix = "var", axes = c(1, 2))
+
+# Afficher les axes des Composantes Principales 1 & 2
+plot(ResACP, choix = "ind", axes = c(1, 2))
+\end{lstlisting}
+
+\subsection{Code Python}
+
+\begin{lstlisting}[style=Pythonstyle, caption={Code Python pour l'ACP avec scikit-learn}]
+# ===============================
+# Chargement des librairies
+# ===============================
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+
+# ===============================
+# Chargement de la base de donnees
+# ===============================
+wine = pd.read_excel("wine.xlsx")
+
+# Visualisation des premieres lignes
+print(wine.head())
+
+# Dimensions (lignes, colonnes)
+print("Dimensions :", wine.shape)
+
+# ===============================
+# Suppression de la variable target (colonne 14)
+# ===============================
+wine_data = wine.iloc[:, :-1]
+
+# ===============================
+# Matrice de dispersion (equivalent ggpairs)
+# ===============================
+sns.pairplot(wine)
+plt.show()
+
+# ===============================
+# Standardisation (implicite dans FactoMineR)
+# ===============================
+scaler = StandardScaler()
+wine_scaled = scaler.fit_transform(wine_data)
+
+# ===============================
+# ACP
+# ===============================
+pca = PCA()
+scores = pca.fit_transform(wine_scaled)
+
+# ===============================
+# Valeurs propres
+# ===============================
+eig = pd.DataFrame({
+    "Valeur propre": pca.explained_variance_,
+    "Variance expliquee (%)": pca.explained_variance_ratio_ * 100,
+    "Variance cumulee (%)": np.cumsum(pca.explained_variance_ratio_) * 100
+})
+print("\nValeurs propres :")
+print(eig)
+
+# ===============================
+# Correlations variables / composantes
+# ===============================
+correlations = pca.components_.T * np.sqrt(pca.explained_variance_)
+cor_df = pd.DataFrame(
+    correlations,
+    columns=[f"Dim.{i+1}" for i in range(correlations.shape[1])],
+    index=wine_data.columns
+)
+print("\nCorrelations variables / composantes :")
+print(cor_df)
+
+# ===============================
+# Cercle des correlations (axes 1 & 2)
+# ===============================
+fig, ax = plt.subplots(figsize=(8, 8))
+circle = plt.Circle((0, 0), 1, fill=False, linestyle='--')
+ax.add_patch(circle)
+
+for i, var in enumerate(wine_data.columns):
+    ax.arrow(0, 0, correlations[i, 0], correlations[i, 1],
+             head_width=0.05, head_length=0.05)
+    ax.text(correlations[i, 0]*1.1, correlations[i, 1]*1.1,
+            var, ha='center', va='center')
+
+ax.set_xlabel("Dim 1")
+ax.set_ylabel("Dim 2")
+ax.set_title("Cercle des correlations")
+ax.axhline(0); ax.axvline(0)
+ax.set_aspect("equal")
+plt.show()
+
+# ===============================
+# Projection des individus (axes 1 & 2)
+# ===============================
+fig, ax = plt.subplots(figsize=(10, 8))
+ax.scatter(scores[:, 0], scores[:, 1], alpha=0.7)
+
+for i in range(len(scores)):
+    ax.text(scores[i, 0], scores[i, 1], str(i), fontsize=8)
+
+ax.set_xlabel("Dim 1")
+ax.set_ylabel("Dim 2")
+ax.set_title("Projection des individus (ACP)")
+ax.axhline(0); ax.axvline(0)
+plt.show()
+\end{lstlisting}
+
+% ============================================
+% CONCLUSION
+% ============================================
+\section{Conclusion}
+
+L'Analyse en Composantes Principales appliquée à la base de données Wine a permis de :
+
+\begin{enumerate}
+    \item \textbf{Réduire efficacement la dimensionnalité} : Les 13 variables initiales ont été synthétisées en 3 composantes principales expliquant près de 67\% de la variance totale.
+    
+    \item \textbf{Identifier les structures sous-jacentes} : L'axe 1 représente la qualité phénolique des vins (flavonoïdes, phénols), tandis que l'axe 2 caractérise leur intensité (couleur, alcool).
+    
+    \item \textbf{Visualiser la classification} : La projection des individus montre une séparation claire des trois cultivars, démontrant l'efficacité de l'ACP comme outil exploratoire préalable à une classification.
+    
+    \item \textbf{Comprendre les relations entre variables} : Le cercle des corrélations révèle les groupes de variables fortement corrélées et les oppositions entre certaines caractéristiques chimiques.
+\end{enumerate}
+
+
